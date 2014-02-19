@@ -1,4 +1,5 @@
 import sqlite3
+from sqlite3 import dbapi2 as sqlite3
 import os
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
 
@@ -8,7 +9,7 @@ app.config.from_object(__name__)
 app.config.update(dict(
     DATABASE = os.path.join(app.root_path, "flaskr.db"),
     DEBUG = True,
-    SECRET_KEY = 'debelopment key',
+    SECRET_KEY = 'development key',
     USERNAME = "admin",
     PASSWORD = "default",
 ))
@@ -41,18 +42,19 @@ def get_db():
 @app.route("/")
 def show_entries():
     db = get_db()
-    cur = db.execute("select title, text from entries order by id dsec")
+    cur = db.execute("select title, text from entries order by id desc")
     entries = cur.fetchall()
     return render_template("show_entries.html", entries = entries)
 
-@app.route("/add", methords=["POST"])
+@app.route("/add", methods=["POST"])
 def add_entry():
     if not session.get("logged_in"):
         abort(401)
     db = get_db()
-    db.excecute("insert into entries (title, text) values (?, ?)",
+    db.execute("insert into entries (title, text) values (?, ?)",
                 [request.form["title"], request.form["text"]])
-
+    
+    db.commit()
     flash("New entry was successfully posted")
     return redirect(url_for("show_entries"))
 
@@ -77,4 +79,5 @@ def logout():
     return redirect(url_for("show_entries"))
 
 if __name__ == "__main__":
+    init_db()
     app.run()
